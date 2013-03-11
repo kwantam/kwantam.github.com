@@ -64,8 +64,8 @@ generate all possible bit vectors of a given length:
 Legal States
 --
 
-Legal states in a twisted ring are those in the ring containing
-all zeros. For example, in a 5-bit ring:
+Legal states in a twisted ring FSM are those in the ring containing the
+state with all zeros. For example, in a 5-bit ring:
 
     00000
     00001
@@ -78,13 +78,13 @@ all zeros. For example, in a 5-bit ring:
     11000
     10000
 
-Note that these rings have an interesting property: there is at most one
-sequential pair of dissimilar bits. Further, we can uniquely identify
-all ten states by looking at only two bits. In the case of the states
-that are all 0 or all 1, we look at the first and last bits, because we
-know that if they're the same all the ones between must be as well. In
-the other states, we look for the 01 or 10 transition, whose position is
-unique among the states.
+Note that these rings have an interesting property: in any state, there
+is at most one sequential pair of dissimilar bits. Further, we can
+uniquely identify all ten states by looking at only two bits. In the
+case of the states that are all 0 or all 1, we look at the first and
+last bits, because we know that if they're the same all the ones between
+must be as well. In the other states, we look for the 01 or 10
+transition, whose position is unique among the states.
 
 Thus, we could write a set of ten functions each of which selects one of
 the legal states. These might look like
@@ -109,8 +109,8 @@ Let's consider how we can generate the one-hot bit selectors for the
 legal states. Recall from above that these have a specific form: either
 every bit in the vector is the same, in which case the first and last
 bit in the vector are the same, or the beginning and end of the vector
-have opposite sign, and there is one 01 or 10 transition somewhere in
-the vector.
+have opposite polarity, and there is one 01 or 10 transition somewhere
+in the vector.
 
 Obviously there's nothing to detect in vectors of 0 length:
 
