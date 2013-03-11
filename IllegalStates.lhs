@@ -1,3 +1,7 @@
+---
+published: true
+---
+{% highlight lhs }
 # Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
 
 Let's meditate on the nature of FSMs utilizing twisted-ring state
@@ -275,3 +279,4 @@ number of two-selector canaries.
 
 Fascinating. 2, 3, 4, and 5-bit rings need a single selector pair; 6, 7,
 and 8-bit rings need two selector pairs; 9 and 10-bit rings need 3.
+{% endhighlight %}
