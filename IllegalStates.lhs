@@ -215,13 +215,14 @@ that our `Eq`, `Ord`, and `Show` instances only work on the names, not
 on the functions themselves.)
 
 > data NamedFunc n f = NFunc n f
-> instance (Show t1) => Show (NamedFunc t1 t2) where
->   show (NFunc n _) = "NF" ++ show n
-> instance (Eq t1) => Eq (NamedFunc t1 t2) where
->   (==) (NFunc n1 _) (NFunc n2 _) = n1 == n2
-> instance (Ord t1) => Ord (NamedFunc t1 t2) where
->   compare (NFunc n1 _) (NFunc n2 _) = compare n1 n2
 > applyNF (NFunc _ f) = f
+> nameNF (NFunc n _) = n
+> instance (Show t1) => Show (NamedFunc t1 t2) where
+>   show nf = "NF" ++ show (nameNF nf)
+> instance (Eq t1) => Eq (NamedFunc t1 t2) where
+>   (==) nf1 nf2 = (nameNF nf1) == (nameNF nf2)
+> instance (Ord t1) => Ord (NamedFunc t1 t2) where
+>   compare nf1 nf2 = compare (nameNF nf1) (nameNF nf2)
 
 Using this, 
 
@@ -262,22 +263,42 @@ combinations for a ring of some specified length.
 >         twoSelNms = combinations 2 $ take (2*n) [0..]
 >         twoSelNFs = zipWith NFunc twoSelNms twoSelFns
 
-Very interesting! 5-bit rings seem to be special in that a single
-two-selector canary is possible. Let's try again, this time ORing some
-number of two-selector canaries.
+Very interesting! Sadly, 5-bit rings seem to be the maximum for which a
+single two-selector canary is possible. That means we'll have to look
+for combinations of two or more canaries such that at least one canary
+flags at least one state in each ring.
+
+To do this, we apply the pairwise canaries to all members of each ring,
+as above. Next, we make m-way combinations of the results, ORing the
+results of the canaries' application to the rings and looking for a full
+set of matches.
 
 > anyL fns = or . flip map fns . flip ($)
-> canaryOrCombos n m = filter isTrue $ map tryComb twoOrSelNFs
->   where isTrue (_,b) = b
->         tryComb nf = (nf,and $ flip map illRings $ or . map (applyNF nf))
->         illStates = bitStrings n \\ (tRing . take n $ repeat 0)
+> canaryOrCombos n m = filter isTrue mCombs
+>   where illStates = bitStrings n \\ (tRing . take n $ repeat 0)
 >         illSeeds = nubBy sameRing illStates
 >         illRings = map tRing illSeeds
 >         twoSelFns = map allL $ combinations 2 $ oneHotVecs n
 >         twoSelNms = combinations 2 $ take (2*n) [0..]
->         twoOrSelFns = map anyL $ combinations m twoSelFns
->         twoOrSelNms = combinations m twoSelNms
->         twoOrSelNFs = zipWith NFunc twoOrSelNms twoOrSelFns
+>         twoSelNFs = zipWith NFunc twoSelNms twoSelFns
+>         applyNFs nf = (nf,flip map illRings $ or . map (applyNF nf))
+>         twoSelOut = map applyNFs twoSelNFs
+>         twoSelMCombs = combinations m twoSelOut
+>         mCombN = map (map $ nameNF . fst) twoSelMCombs
+>         mCombF = map (anyL . map (applyNF . fst)) twoSelMCombs
+>         mCombR = map (and . foldl1 (zipWith (||)) . map snd) twoSelMCombs
+>         mCombs = zipWith3 (\n f r -> (NFunc n f, r)) mCombN mCombF mCombR
+>         isTrue (_,b) = b
+
+Note that we could now just redefine
+
+    canaryCombos = flip canaryOrCombos 1
 
 Fascinating. 2, 3, 4, and 5-bit rings need a single selector pair; 6, 7,
-and 8-bit rings need two selector pairs; 9 and 10-bit rings need 3.
+and 8-bit rings need two selector pairs; 9, 10, and 11-bit rings need 3;
+and 12-bit rings seem to require 4. The pattern appears to be that an
+N-bit ring needs `floor(N/3)` selectors to form a canary combination.
+
+With a little work, perhaps we could derive this result rigorously. For
+now, I think that's sufficient meditation.
+
