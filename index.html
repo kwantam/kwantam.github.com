@@ -16,38 +16,39 @@
 <h3><code><a href="http://github.com/kwantam/lviv">lviv</a></code></h3>
 <p><code>lviv</code> is a hybrid functional/stack programming language. Here's some example code:</p>
 
-<blockquote>
-<div class="highlight"><pre><span class="c1">; qsort.lviv</span>
-<span class="c1">; quicksort implemented in lviv</span>
+{% highlight scheme %}
 
-<span class="c1">; filter2</span>
-<span class="c1">; given a predicate in slot 0 and a list in slot 1</span>
-<span class="c1">; filter the list into two lists, one for which the</span>
-<span class="c1">; predicate is true and one for which it is false</span>
-<span class="p">(</span> <span class="p">(</span><span class="nf">*tList</span> <span class="nv">*fList</span><span class="p">)</span>                          <span class="c1">; if the list is null, return the true and false lists</span>
-  <span class="p">(</span><span class="nf">*lList</span> <span class="k">uncons</span> <span class="p">(</span><span class="nf">*tList</span> <span class="k">cons</span> <span class="nv">*fList</span><span class="p">)</span>      <span class="c1">; otherwise, take the first element, cons it to tlist</span>
-                 <span class="p">(</span><span class="nf">*fList</span> <span class="k">cons</span> <span class="nv">*tList</span> <span class="k">swap</span><span class="p">)</span> <span class="c1">; or flist as appropriate</span>
-                 <span class="mi">3</span> <span class="k">pick</span> <span class="nv">*pred</span> <span class="k">apply</span> <span class="k">if </span>    <span class="c1">; (test whether to cons to tList or fList)</span>
-   <span class="mi">3</span> <span class="k">roll</span> <span class="nv">***pred</span> <span class="k">eval</span> <span class="nv">*filt2Hlp</span><span class="p">)</span>          <span class="c1">; then get the stack back in order and call again</span>
-  <span class="nv">*lList</span> <span class="nv">null?</span> <span class="k">if </span><span class="p">)</span>                        <span class="c1">; (test whether list is null)</span>
-<span class="p">(</span><span class="nf">*tList</span> <span class="nv">*fList</span> <span class="nv">*lList</span> <span class="nv">*pred</span><span class="p">)</span> <span class="k">lambda </span><span class="nv">*filt2Hlp</span> <span class="k">define</span>
+; qsort.lviv
+; quicksort implemented in lviv
 
-<span class="p">(</span> <span class="p">()</span> <span class="p">()</span> <span class="nv">*lList</span> <span class="nv">**pred</span> <span class="k">eval</span> <span class="nv">*filt2Hlp</span> <span class="p">)</span>     <span class="c1">; call the helper function with empty tList and fList</span>
-<span class="p">(</span><span class="nf">*lList</span> <span class="nv">*pred</span><span class="p">)</span> <span class="k">lambda </span><span class="nv">*filt2</span> <span class="k">define</span>
+; filter2
+; given a predicate in slot 0 and a list in slot 1
+; filter the list into two lists, one for which the
+; predicate is true and one for which it is false
+( (*tList *fList) ; if the list is null, return the true and false lists
+  (*lList uncons (*tList cons *fList) ; otherwise, take the first element, cons it to tlist
+                 (*fList cons *tList swap) ; or flist as appropriate
+                 3 pick *pred apply if ; (test whether to cons to tList or fList)
+   3 roll ***pred eval *filt2Hlp) ; then get the stack back in order and call again
+  *lList null? if ) ; (test whether list is null)
+(*tList *fList *lList *pred) lambda *filt2Hlp define
 
-<span class="c1">; qsort: use the first element of the list as the pivot</span>
-<span class="c1">; filter the list and qsort the resulting lists</span>
-<span class="p">(</span> <span class="p">(</span><span class="nf">*lList</span><span class="p">)</span>                             <span class="c1">; if it&#39;s 0 or 1 elm long, just return it</span>
-  <span class="p">(</span><span class="nf">*lList</span> <span class="k">uncons</span> <span class="nv">dup</span> <span class="mi">3</span> <span class="k">unroll</span>          <span class="c1">; otherwise, get the next pivot, save off the pivot</span>
-   <span class="p">(</span><span class="nf">***n</span> <span class="nv">&lt;</span><span class="p">)</span> <span class="k">cons</span> <span class="p">(</span><span class="nf">***n</span><span class="p">)</span> <span class="k">lambda </span><span class="nv">filt2</span>   <span class="c1">; filter the list into greater and lesser lists</span>
-   <span class="nv">*qsort</span> <span class="k">swap</span>                         <span class="c1">; sort the first part</span>
-   <span class="nv">*qsort</span> <span class="mi">3</span> <span class="k">roll</span> <span class="k">:cons</span>                 <span class="c1">; sort the second part, then replace the pivot</span>
-   <span class="k">append</span>                              <span class="c1">; append them, and we&#39;re sorted</span>
-  <span class="p">)</span>
-  <span class="p">(</span><span class="no">#t</span><span class="p">)</span> <span class="p">(</span><span class="nf">*lList</span> <span class="nv">cdr</span> <span class="nv">null?</span><span class="p">)</span> <span class="nv">*lList</span> <span class="nv">null?</span> <span class="k">if if </span><span class="p">)</span>
-<span class="p">(</span><span class="nf">*lList</span><span class="p">)</span> <span class="k">lambda </span><span class="nv">*qsort</span> <span class="k">define</span>
-</pre></div>
-</blockquote>
+( () () *lList **pred eval *filt2Hlp ) ; call the helper function with empty tList and fList
+(*lList *pred) lambda *filt2 define
+
+; qsort: use the first element of the list as the pivot
+; filter the list and qsort the resulting lists
+( (*lList) ; if it's 0 or 1 elm long, just return it
+  (*lList uncons dup 3 unroll ; otherwise, get the next pivot, save off the pivot
+   (***n <) cons (***n) lambda filt2    ; filter the list into greater and lesser lists
+   *qsort swap                          ; sort the first part
+   *qsort 3 roll :cons                  ; sort the second part, then replace the pivot
+   append                               ; append them, and we are sorted
+  )
+  (#t) (*lList cdr null?) *lList null? if if )
+(*lList) lambda *qsort define
+
+{% endhighlight %}
 
 <h3><a href="http://github.com/kwantam/TriHs">TriHs</a></h3>
 <p>A Tetris clone in Haskell using Cairo and Gtk2Hs. In 2-player mode, you can screw with your opponent by switching their next piece for a random one.</p>
