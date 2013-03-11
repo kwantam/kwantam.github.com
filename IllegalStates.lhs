@@ -1,4 +1,5 @@
-# Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
+Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
+==
 
 Let's meditate on the nature of FSMs utilizing twisted-ring state
 vectors. Such FSMs have some nice properties: a more efficient state
@@ -27,7 +28,8 @@ make for less typing and easier reading.
 > inv 0 = 1
 > inv _ = undefined
 
-### Generating Twisted Rings
+Generating Twisted Rings
+--
 
 The twisted ring transition is simple: shift all the bits left, and
 insert the inverse of the MSB into the LSB. (See also:
@@ -59,7 +61,8 @@ generate all possible bit vectors of a given length:
 >   where nm1 = bitStrings $ n - 1
 > allStates5 = bitStrings 5
 
-### Legal States
+Legal States
+--
 
 Legal states in a twisted ring are those in the ring containing
 all zeros. For example, in a 5-bit ring:
@@ -99,7 +102,8 @@ the legal states. These might look like
 
 But why write functions we can generate instead?
 
-### Generating One-Hot Selectors For Legal States
+Generating One-Hot Selectors For Legal States
+--
 
 Let's consider how we can generate the one-hot bit selectors for the
 legal states. Recall from above that these have a specific form: either
@@ -140,20 +144,21 @@ If we were feeling somewhat less obtuse, we might instead say
 
     allL fns x = and (map ($x) fns)
 
-### Illegal States
+Illegal States
+--
 
 The illegal states are all bit strings of length N that aren't in the
 ring consisting of N zeros.
 
-> illegalStates5 = allStates5 \\ (tRing [0,0,0,0,0])
+> illegalStates5 = allStates5 \\ tRing [0,0,0,0,0]
 
-Like the legal states, the illegal states form disjoint rings. If one
+Like the legal states, the illegal states form closed rings: if one
 state is in another state's ring, then we can be sure that the two
 states produce identical rings modulo a phase shift. This lets us easily
 uniqify the list of illegal states into a seed list containing one
 (arbitrarily chosen) representative member of each illegal ring.
 
-> sameRing a b = [] /= (findIndices ((==)a) $ tRing b)
+> sameRing a b = [] /= findIndices (==a) (tRing b)
 > illegalState5Seeds = nubBy sameRing illegalStates5
 
 Now we can also segregate all the illegal states into their
@@ -168,10 +173,10 @@ states to find out.
 At this point I think it's clear we have no choice but to escalate our
 abuse of `flip` et al:
 
-> nTrigStateSels selL = map ((flip map selL) . (flip ($)))
+> nTrigStateSels selL = map $ flip map selL . flip ($)
 
-OK, OK, I admit the golfing is getting a little absurd. We could
-also just say
+OK, I admit the golfing is getting a little absurd. We could also just
+say
 
     nTrigStateSels selL states = map (\x -> map ($x) selL) states
 
@@ -184,7 +189,8 @@ Looking at this list we see that legal states match exactly 1 selector
 (as we should expect), while most illegal states match 3 selectors. The
 two alternating states, 01010 and 10101, each match 5 selectors!
 
-### Canary Combinations
+Canary Combinations
+--
 
 Now, the million dollar question: can we pick some subset of the
 selectors such that those selectors will all match at least one state in
@@ -200,7 +206,7 @@ we can make a bunch of multi-selectors:
 > combinations 1    ls  = map (:[]) ls
 > combinations n (l:ls) = cHlp l ls
 >   where cHlp l []          = []
->         cHlp l l2@(nl:nl2) = (map (l:) $ combinations (n-1) l2) ++ (cHlp nl nl2)
+>         cHlp l l2@(nl:nl2) = map (l:) (combinations (n-1) l2) ++ cHlp nl nl2
 
 Now we can generate all two-way selector functions. Sadly, there's no
 good way of making a `Show` instance for functions; instead, we're going
