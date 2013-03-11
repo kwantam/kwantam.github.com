@@ -14,27 +14,25 @@ published: true
 <body>
 <h1>kwantam.github.com</h1>
 
-<h2>Snippets</h2>
-<ul>
-    <li>Here, have a <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme.</p>
-
+<h3>Snippets</h3>
+<h4>or, my irregularly updated code blog</h4>
+<dl><dt>2011 June 17</dt>
+    <dd>A <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme derived via the <a href="http://blog.jfet.org/2009/06/14#2009061401">applicative-order Y-combinator:</a><br/>
 {% highlight scheme %}
     ((eval '(lambda (x) (pp `((eval '(lambda (x) (pp ,x))) ',x))))
            '`((eval '(lambda (x) (pp ,x))) ',x))
 {% endhighlight %}
-    </li>
+    </dd>
+    <dt>2013 March 10</dt>
+    <dd>A meditation on <a href="https://github.com/kwantam/kwantam.github.com/blob/master/IllegalStates.lhs">efficiently detecting illegal states in twisted-ring FSM state vectors</a></dd>
+</dl>
 
-<li>A meditation on <a href="https://github.com/kwantam/kwantam.github.com/blob/master/IllegalStates.lhs">efficiently detecting illegal states in twisted-ring FSM state vectors</a></li>
-
-</ul>
-
-<h2>Projects</h2>
+<h3>Projects</h3>
 
 <h3><code><a href="http://github.com/kwantam/lviv">lviv</a></code></h3>
 <p><code>lviv</code> is a hybrid functional/stack programming language. Here's some example code:</p>
 
 {% highlight scheme %}
-
 ; qsort.lviv
 ; quicksort implemented in lviv
 
@@ -64,7 +62,6 @@ published: true
   )
   (#t) (*lList cdr null?) *lList null? if if )
 (*lList) lambda *qsort define
-
 {% endhighlight %}
 
 <h3><a href="http://github.com/kwantam/TriHs">TriHs</a></h3>
