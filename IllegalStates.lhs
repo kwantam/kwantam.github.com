@@ -128,7 +128,7 @@ two of the argument.
 >                         : selX x (m-1)
 > inStatesL5 = oneHotVecs 5
 
-`inStatesL5` is now just the list of inStateX functions given above.
+`inStatesL5` is now just the list of `inStateX` functions given above.
 
 If we want to apply multiple selectors simultaneously, we might provide
 a list of them and apply them all to a given input. Here's one way to do
@@ -256,8 +256,8 @@ combinations for a ring of some specified length.
 >         twoSelNms = combinations 2 $ take (2*n) [0..]
 >         twoSelNFs = zipWith NFunc twoSelNms twoSelFns
 
-Fascinating! 5-bit rings seem to be special in that a single two-
-selector canary is possible. Let's try again, this time ORing some
+Very interesting! 5-bit rings seem to be special in that a single
+two-selector canary is possible. Let's try again, this time ORing some
 number of two-selector canaries.
 
 > anyL fns = or . flip map fns . flip ($)
