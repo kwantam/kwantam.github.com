@@ -13,8 +13,22 @@ published: true
 </head>
 <body>
 <h1>kwantam.github.com</h1>
-<h3>Welcome</h3>
-<p>I've got a few projects hosted here on Github:</p>
+
+<h2>Snippets</h2>
+<ul>
+    <li>Here, have a <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme.</p>
+
+{% highlight scheme %}
+    ((eval '(lambda (x) (pp `((eval '(lambda (x) (pp ,x))) ',x))))
+           '`((eval '(lambda (x) (pp ,x))) ',x))
+{% endhighlight %}
+    </li>
+
+<li>A meditation on <a href="https://github.com/kwantam/kwantam.github.com/blob/master/IllegalStates.lhs">efficiently detecting illegal states in twisted-ring FSM state vectors</a></li>
+
+</ul>
+
+<h2>Projects</h2>
 
 <h3><code><a href="http://github.com/kwantam/lviv">lviv</a></code></h3>
 <p><code>lviv</code> is a hybrid functional/stack programming language. Here's some example code:</p>
@@ -82,18 +96,5 @@ published: true
 <h3><a href="http://github.com/kwantam/sousvide628">sousvide628</a></h3>
 <p>Some rudimentary code to use a <a href="http://www.microchip.com/wwwproducts/Devices.aspx?dDocName=en010210">PIC16F628a</a> to control a heater and pump for Sous-vide.</p>
 
-<h3>Other</h3>
-<ul>
-    <li>Here, have a <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme.</p>
-
-{% highlight scheme %}
-    ((eval '(lambda (x) (pp `((eval '(lambda (x) (pp ,x))) ',x))))
-           '`((eval '(lambda (x) (pp ,x))) ',x))
-{% endhighlight %}
-    </li>
-
-<li>A meditation on <a href="https://github.com/kwantam/kwantam.github.com/blob/master/IllegalStates.lhs">efficiently detecting illegal states in twisted-ring FSM state vectors</a></li>
-
-</ul>
 </body>
 </html>
