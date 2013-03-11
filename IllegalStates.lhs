@@ -1,4 +1,5 @@
-** Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors **
+Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
+==
 
 Let's meditate on the nature of FSMs utilizing twisted-ring state
 vectors. Such FSMs have some nice properties: a more efficient state
@@ -14,7 +15,6 @@ using compact state coding.
 Let's see if we can't do a little better. First, some setup.
 
 > module IllegalStates where
-> 
 > import Data.List ((\\), findIndices, nubBy)
 
 We're talking about logic, but Bools are visually noisy. Let's just
@@ -25,11 +25,12 @@ make for less typing and easier reading.
 > inv 0 = 1
 > inv _ = undefined
 
-** Generating Twisted Rings **
+Generating Twisted Rings
+--
 
 The twisted ring transition is simple: shift all the bits left, and
-insert the inverse of the MSB into the LSB.
-    http://en.wikipedia.org/wiki/Ring_counter
+insert the inverse of the MSB into the LSB. (See also:
+http://en.wikipedia.org/wiki/Ring_counter )
 
 > tRingNext    []  = []
 > tRingNext (b:bs) = bs ++ [inv b]
@@ -55,24 +56,24 @@ generate all possible bit vectors of a given length:
 > bitStrings 0 = [[]]
 > bitStrings n = ( map (0:) nm1 ) ++ ( map (1:) nm1 )
 >   where nm1 = bitStrings $ n - 1
->
 > allStates5 = bitStrings 5
 
-** Legal States **
+Legal States
+--
 
 Legal states in a twisted ring are those in the ring containing
 all zeros. For example, in a 5-bit ring:
 
-00000
-00001
-00011
-00111
-01111
-11111
-11110
-11100
-11000
-10000
+    00000
+    00001
+    00011
+    00111
+    01111
+    11111
+    11110
+    11100
+    11000
+    10000
 
 Note that these rings have an interesting property: there is at most one
 sequential pair of dissimilar bits. Further, we can uniquely identify
@@ -85,20 +86,21 @@ unique among the states.
 Thus, we could write a set of ten functions each of which selects one of
 the legal states. These might look like
 
-< inState0 [0,_,_,_,0] = True ; inState0 _ = False
-< inState1 [_,_,_,0,1] = True ; inState1 _ = False
-< inState2 [_,_,0,1,_] = True ; inState1 _ = False
-< inState3 [_,0,1,_,_] = True ; inState1 _ = False
-< inState4 [0,1,_,_,_] = True ; inState1 _ = False
-< inState5 [1,_,_,_,1] = True ; inState1 _ = False
-< inState6 [_,_,_,1,0] = True ; inState1 _ = False
-< inState7 [_,_,1,0,_] = True ; inState1 _ = False
-< inState8 [_,1,0,_,_] = True ; inState1 _ = False
-< inState9 [1,0,_,_,_] = True ; inState1 _ = False
+> inState0 [0,_,_,_,0] = True ; inState0 _ = False
+> inState1 [_,_,_,0,1] = True ; inState1 _ = False
+> inState2 [_,_,0,1,_] = True ; inState2 _ = False
+> inState3 [_,0,1,_,_] = True ; inState3 _ = False
+> inState4 [0,1,_,_,_] = True ; inState4 _ = False
+> inState5 [1,_,_,_,1] = True ; inState5 _ = False
+> inState6 [_,_,_,1,0] = True ; inState6 _ = False
+> inState7 [_,_,1,0,_] = True ; inState7 _ = False
+> inState8 [_,1,0,_,_] = True ; inState8 _ = False
+> inState9 [1,0,_,_,_] = True ; inState9 _ = False
 
 But why write functions we can generate instead?
 
-** Generating One-Hot Selectors For Legal States **
+Generating One-Hot Selectors For Legal States
+--
 
 Let's consider how we can generate the one-hot bit selectors for the
 legal states. Recall from above that these have a specific form: either
@@ -125,7 +127,6 @@ the argument.
 >           | m < 0     = []
 >           | otherwise = (\ls -> take 2 (drop m ls) == x)
 >                         : selX x (m-1)
->
 > inStatesL5 = oneHotVecs 5
 
 inStatesL5 is now just the list of inStateX functions given above.
@@ -138,9 +139,10 @@ this in an abrasively point-free style:
 
 If we were feeling somewhat less obtuse, we might instead say
 
-< allL fns x = and (map ($x) fns)
+    allL fns x = and (map ($x) fns)
 
-** Illegal States **
+Illegal States
+--
 
 The illegal states are all bit strings of length N that aren't in the
 ring consisting of N zeros.
@@ -154,7 +156,6 @@ uniqify the list of illegal states into a seed list containing one
 (arbitrarily chosen) representative member of each illegal ring.
 
 > sameRing a b = [] /= (findIndices ((==)a) $ tRing b)
->
 > illegalState5Seeds = nubBy sameRing illegalStates5
 
 Now we can also segregate all the illegal states into their
@@ -170,25 +171,22 @@ We have no choice but to escalate our abuse of flip et al:
 
 > nTrigStateSels selL = map ((flip map selL) . (flip ($)))
 
-OK, OK, I admit the golfing is getting a little absurd.
+OK, OK, I admit the golfing is getting a little absurd. We could
+also just say
 
-< nTrigStateSels selL states = map (\x -> map ($x) selL) states
+    nTrigStateSels selL states = map (\x -> map ($x) selL) states
 
 Now then, the results of such an application:
 
 > inStateVecs5 = nTrigStateSels inStatesL5 allStates5
->
 > numInStatesByString = zip allStates5 $ map (length . filter id) inStateVecs5
 
-Prettily printing this list, e.g., like so
+Looking at this list we see that legal states match exactly 1 selector
+(as we should expect), while most illegal states match 3 selectors. The
+two alternating states, 01010 and 10101, each match 5 selectors!
 
-< mapM (putStrLn.show) numInStatesByString
-
-we see that legal states match exactly 1 selector (as we should expect),
-while most illegal states match 3 selectors. The two alternating states,
-01010 and 10101, each match 5 selectors!
-
-** Canary Combinations **
+Canary Combinations
+--
 
 Now, the six million dollar question: can we pick some subset of the
 selectors such that those selectors will all match at least one state in
@@ -221,7 +219,9 @@ functions themselves.)
 > instance (Ord t1) => Ord (NamedFunc t1 t2) where
 >   compare (NFunc n1 _) (NFunc n2 _) = compare n1 n2
 > applyNF (NFunc _ f) = f
->
+
+Using this, 
+
 > twoStateCombFuncs = map allL $ combinations 2 inStatesL5
 > twoStateCombNames = map (\(x:y:[]) -> (x,y)) $ combinations 2 [0,1,2,3,4,5,6,7,8,9]
 > twoStateCombs = zipWith NFunc twoStateCombNames twoStateCombFuncs
@@ -265,7 +265,6 @@ selector canary is possible. Let's try again, this time ORing some
 number of two-selector canaries.
 
 > anyL fns = or . flip map fns . flip ($)
->
 > canaryOrCombos n m = filter isTrue $ map tryComb twoOrSelNFs
 >   where isTrue (_,b) = b
 >         tryComb nf = (nf,and $ flip map illRings $ or . map (applyNF nf))
