@@ -1,10 +1,10 @@
 Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
 ==
 
-Let's meditate on the nature of FSMs utilizing twisted-ring state
-vectors. Such FSMs have some nice properties: a more efficient state
-coding than a one-hot machine, gray state transitions, and a trivial
-computation of the next state vector.
+Let's meditate for a moment on the nature of FSMs utilizing twisted-ring
+state vectors. Such FSMs have some nice properties: a more efficient
+state coding than a one-hot machine, gray state transitions, and a
+trivial computation of the next state vector.
 
 However, since not all state bit vectors represent legal states, most
 designers will want to include illegal state detection. While not as
@@ -14,8 +14,9 @@ using compact state coding.
 
 Let's see if we can't do a little better. First, some setup.
 
-(Note: this file is Literate Haskell. You can grab the raw version, dump
-it into GHCI, and play along at home!)
+(Note: this file is Literate Haskell. You can grab the 
+<a href="http://kwantam.github.com/lhs/IllegalStates.lhs">raw version</a>,
+dump it into GHCI, and play along at home!)
 
 > module IllegalStates where
 > import Data.List ((\\), findIndices, nubBy)
@@ -33,7 +34,7 @@ Generating Twisted Rings
 
 The twisted ring transition is simple: shift all the bits left, and
 insert the inverse of the MSB into the LSB. (See also:
-http://en.wikipedia.org/wiki/Ring_counter )
+<a href="http://en.wikipedia.org/wiki/Ring_counter">Ring counter</a> (Wikipedia))
 
 > tRingNext    []  = []
 > tRingNext (b:bs) = bs ++ [inv b]
@@ -301,4 +302,3 @@ N-bit ring needs `floor(N/3)` selectors to form a canary combination.
 
 With a little work, perhaps we could derive this result rigorously. For
 now, I think that's sufficient meditation.
-

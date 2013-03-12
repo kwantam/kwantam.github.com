@@ -1,3 +1,4 @@
-p,dl,dt,dd,li,ul,.highlight { font-size: 16; }
-* { font-family: 'Inconsolata', 'DejaVu Sans Mono', 'Courier New', courier, monospace; }
-h1,h2,h3,h4,h5,h6,p,ul,li,dt,dd,dl { font-family: 'Brawler', 'Times New Roman', 'DejaVu Serif', Times, serif; }
+html,body {width:600px;margin-left:5%;margin-right:auto;margin-top:2%;}
+pre,code,kbd,samp,tt { font-family: 'Inconsolata', 'DejaVu Sans Mono', 'Courier New', courier, monospace; }
+html,body,p,dl,dt,dd,li,ul,.highlight { font-family: 'Brawler', 'Times New Roman', 'DejaVu Serif', Times, serif; }
+p,dl,dt,dd,li,ul,.highlight,pre,code,kbd,samp,tt { font-size: 13pt; }
