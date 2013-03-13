@@ -4,14 +4,21 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
-  <title></title>
+  <meta name="author" content="Riad Wahby" />
+  <title>Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors</title>
   <link rel="stylesheet" href="css/hscolour.css" type="text/css" />
   <link rel="stylesheet" href="css/main.css" type="text/css" />
   <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Inconsolata" type="text/css" />
   <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Brawler" type="text/css" />
+  <link rel="SHORTCUT ICON" href="images/favicon.png">
 </head>
 <body>
-<h1 id="efficiently-detecting-illegal-states-in-twisted-ring-fsm-state-vectors">Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors</h1><p>Let’s meditate for a moment on the nature of FSMs utilizing twisted-ring state vectors. Such FSMs have some nice properties: a more efficient state coding than a one-hot machine, gray state transitions, and a trivial computation of the next state vector.</p><p>However, since not all state bit vectors represent legal states, most designers will want to include illegal state detection. While not as onerous as illegal state detection in a one-hot machine, at first blush it seems that illegal state detection could be far worse than in a FSM using compact state coding.</p><p>Let’s see if we can’t do a little better. First, some setup.</p><p>(Note: this file is Literate Haskell. You can grab the <a href="http://kwantam.github.com/lhs/IllegalStates.lhs">raw version</a>, dump it into GHCI, and play along at home!)</p><pre><span class='hs-varop'>&gt;</span> <span class='hs-keyword'>module</span> <span class='hs-conid'>IllegalStates</span> <span class='hs-keyword'>where</span>
+<div id="header">
+<h1 class="title">Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors</h1>
+<h2 class="author">Riad Wahby</h2>
+<h3 class="date">2013 Mar 10</h3>
+</div>
+<p>Let’s meditate for a moment on the nature of FSMs utilizing twisted-ring state vectors. Such FSMs have some nice properties: a more efficient state coding than a one-hot machine, gray state transitions, and a trivial computation of the next state vector.</p><p>However, since not all state bit vectors represent legal states, most designers will want to include illegal state detection. While not as onerous as illegal state detection in a one-hot machine, at first blush it seems that illegal state detection could be far worse than in a FSM using compact state coding.</p><p>Let’s see if we can’t do a little better. First, some setup.</p><p>(Note: this file is Literate Haskell. You can grab the <a href="http://kwantam.github.com/lhs/IllegalStates.lhs">raw version</a>, dump it into GHCI, and play along at home!)</p><pre><span class='hs-varop'>&gt;</span> <span class='hs-keyword'>module</span> <span class='hs-conid'>IllegalStates</span> <span class='hs-keyword'>where</span>
 <span class='hs-varop'>&gt;</span> <span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>List</span> <span class='hs-layout'>(</span><span class='hs-layout'>(</span><span class='hs-varop'>\\</span><span class='hs-layout'>)</span><span class='hs-layout'>,</span> <span class='hs-varid'>findIndices</span><span class='hs-layout'>,</span> <span class='hs-varid'>nubBy</span><span class='hs-layout'>)</span>
 </pre><p>We’re talking about logic, but <code>Bool</code>s are visually noisy. Let’s just agree to behave ourselves and operate on lists containing 0 and 1 to make for less typing and easier reading.</p><pre><span class='hs-varop'>&gt;</span> <span class='hs-definition'>inv</span> <span class='hs-num'>1</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>0</span>
 <span class='hs-varop'>&gt;</span> <span class='hs-definition'>inv</span> <span class='hs-num'>0</span> <span class='hs-keyglyph'>=</span> <span class='hs-num'>1</span>
@@ -110,5 +117,8 @@
 <span class='hs-varop'>&gt;</span>         <span class='hs-varid'>mCombs</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>zipWith3</span> <span class='hs-layout'>(</span><span class='hs-keyglyph'>\</span><span class='hs-varid'>n</span> <span class='hs-varid'>f</span> <span class='hs-varid'>r</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>NFunc</span> <span class='hs-varid'>n</span> <span class='hs-varid'>f</span><span class='hs-layout'>,</span> <span class='hs-varid'>r</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-varid'>mCombN</span> <span class='hs-varid'>mCombF</span> <span class='hs-varid'>mCombR</span>
 <span class='hs-varop'>&gt;</span>         <span class='hs-varid'>isTrue</span> <span class='hs-layout'>(</span><span class='hs-keyword'>_</span><span class='hs-layout'>,</span><span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>b</span>
 </pre><p>Note that we could now just redefine</p><pre><code>canaryCombos = flip canaryOrCombos 1</code></pre><p>Fascinating. 2, 3, 4, and 5-bit rings need a single selector pair; 6, 7, and 8-bit rings need two selector pairs; 9, 10, and 11-bit rings need 3; and 12-bit rings seem to require 4. The pattern appears to be that an N-bit ring needs <code>floor(N/3)</code> selectors to form a canary combination.</p><p>With a little work, perhaps we could derive this result rigorously. For now, I think that’s sufficient meditation.</p>
+<p><a href="./" style="text-decoration:none;float:left;">&larr;</a></p>
+<p class="footnote">Questions? Comments?<br />
+<a href="http://twitter.com/kwantam">@kwantam</a> | &lt;<a href="mailto:kwantam@gmail.com">kwantam@gmail.com</a>&gt; | <a href="http://github.com/kwantam">github</a></p>
 </body>
 </html>

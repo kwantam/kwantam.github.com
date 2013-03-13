@@ -1,5 +1,6 @@
-Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
-==
+% Efficiently Detecting Illegal States in Twisted-Ring FSM State Vectors
+% Riad Wahby
+% 2013 Mar 10
 
 Let's meditate for a moment on the nature of FSMs utilizing twisted-ring
 state vectors. Such FSMs have some nice properties: a more efficient
