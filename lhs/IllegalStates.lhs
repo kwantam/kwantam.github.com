@@ -144,7 +144,7 @@ this in an abrasively point-free style:
 
 If we were feeling somewhat less obtuse, we might instead say
 
-    allL fns x = and (map ($x) fns)
+< allL fns x = and (map ($x) fns)
 
 Illegal States
 --
@@ -180,7 +180,7 @@ abuse of `flip` et al:
 OK, I admit the golfing is getting a little absurd. We could also just
 say
 
-    nTrigStateSels selL states = map (\x -> map ($x) selL) states
+< nTrigStateSels selL states = map (\x -> map ($x) selL) states
 
 Now then, the results of such an application:
 
@@ -294,7 +294,7 @@ set of matches.
 
 Note that we could now just redefine
 
-    canaryCombos = flip canaryOrCombos 1
+< canaryCombos = flip canaryOrCombos 1
 
 Fascinating. 2, 3, 4, and 5-bit rings need a single selector pair; 6, 7,
 and 8-bit rings need two selector pairs; 9, 10, and 11-bit rings need 3;

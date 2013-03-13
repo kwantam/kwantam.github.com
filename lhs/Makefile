@@ -6,7 +6,7 @@
 HTMLOUTPUTDIR := ../
 
 .lhs.html:
-	cat $< | hscolour -lit -css -partial | pandoc --no-wrap -sS -t html -H head.html -A tail.html > ${HTMLOUTPUTDIR}/$@
+	cat $< | sed 's/^< /> /' | hscolour -lit -css -partial | pandoc --no-wrap -sS -t html -H head.html -A tail.html > ${HTMLOUTPUTDIR}/$@
 
 all:
 	@echo ERROR please choose a file!
