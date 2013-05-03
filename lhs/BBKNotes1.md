@@ -11,7 +11,7 @@ Hardware
 
 The BBK is a rather capable little beastie. <a href="http://beagleboard.org/Products/BeagleBone%20Black">BeagleBoard.org has the details</a>. Suffice it to say, you get a lot for your money.
 
-While the procedure below should not require one, you might want to spring for a <a href="http://circuitco.com/support/index.php?title=BeagleBone_Black_Accessories#Serial_Debug_Cables">serial debug cable</a> so you can have eyes on the device during the boot process. I bought a nice one from <a href="https://specialcomp.com/beaglebone/#20411">Special Computing</a> that uses the same USB Mini-B cable and is 3.3/5V selectable. (By the way, I highly recommend Special Computing; they shipped super fast!)
+While the procedure below should not require one, you might want to spring for a <a href="http://circuitco.com/support/index.php?title=BeagleBone_Black_Accessories#Serial_Debug_Cables">serial debug cable</a> so you can have eyes on the device during the boot process. I have a nice one from <a href="https://specialcomp.com/beaglebone/#20411">Special Computing</a> that uses the same USB Mini-B cable and is 3.3/5V selectable. Alternatively, the <a href="http://www.adafruit.com/products/954">Adafruit USB to TTL serial cable</a> is really nice because of the pinout flexibility.
 
 You can power the device exclusively from USB, but it's handier if you've got an <a href="http://circuitco.com/support/index.php?title=BeagleBone_Black_Accessories#5VDC_Power_Supplies">external supply</a> so that you can pull the USB connectors on the fly without losing power.
 
@@ -58,7 +58,7 @@ USB Gadgets
 By default, the image we're using doesn't enable USB gadgets at boot. With the following changes, the device will install all the gadgets, including
 
 * USB ethernet with static IP address
-* USB serial (cdc_acm driver) with console
+* USB serial (`cdc_acm` driver), enabling serial console
 * USB storage exporting the internal 2 GB memory
 
 First, we will configure the USB ethernet device. Open `/etc/network/interfaces` in your favorite text editor, and add the following:
@@ -135,4 +135,5 @@ This is a list of some other stuff I've installed. Compiling the Gambit scheme w
 * libreadline6-dev
 * <a href="http://gambitscheme.org/">gambit scheme</a>
 * <a href="http://github.com/kwantam/lviv/">lviv</a>
+* octave
 
