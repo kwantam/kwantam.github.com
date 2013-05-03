@@ -83,6 +83,8 @@ Finally, we will configure the system to install the `g_multi` module at startup
 If you have completed all of the above, you can test it before rebooting with
 
     modprobe g_multi file=/dev/mmcblk1p2
+    telinit q
+    ifup usb0
 
 Now, connect your computer to the onboard USB mini-B port. After things settle down, in the *host computer* dmesg output you should see something like:
 
@@ -105,15 +107,17 @@ Now, connect your computer to the onboard USB mini-B port. After things settle d
     Attached SCSI disk
     usb0: no IPv6 routers present
 
-Now you should be able to mount the eMMC device on the host machine:
+Now, on the host machine, you should be able to:
 
     mount /dev/sdb /mnt/ext
+    ls /mnt/ext
 
-You can also configure the virtual USB ethernet device:
+and
 
     ifconfig usb0 172.17.0.2 netmask 255.255.0.0
+    ssh root@172.17.0.1
 
-Finally, you should be able to get a serial console:
+and
 
     screen /dev/ttyACM0 115200
 
