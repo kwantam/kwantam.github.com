@@ -1,8 +1,8 @@
-% BeagleBoard Black Notes, Part 1
+% BeagleBone Black Notes, Part 1
 % Riad Wahby
 % 2013 May 2
 
-Having just picked up a couple BeagleBoard Blacks (BeagleBoards Black?)
+Having just picked up a couple BeagleBone Blacks (BeagleBones Black?)
 (just BBK from now on), I immediately set about getting a running Debian
 installation. Turns out, it is pretty easy.
 
