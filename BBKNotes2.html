@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Riad Wahby" />
+  <title>BeagleBone Black Notes, Part 2</title>
+  <link rel="stylesheet" href="css/hscolour.css" type="text/css" />
+  <link rel="stylesheet" href="css/main.css" type="text/css" />
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Brawler|Inconsolata" type="text/css" />
+  <link rel="SHORTCUT ICON" href="images/favicon.png">
+</head>
+<body>
+<div id="header">
+<h1 class="title">BeagleBone Black Notes, Part 2</h1>
+<h2 class="author">Riad Wahby</h2>
+<h3 class="date">2013 May 4</h3>
+</div>
+<p>Continuing from our <a href="BBKNotes1.html">previous session</a>, it’s time to continue hacking.</p><h2 id="usb-network-bridge">USB network bridge</h2><p>A quick couple scripts so we can bridge network through the USB interface.</p><p>On the host machine, we create <code>/usr/local/src/usbnet_gate</code> like so:</p><pre><code>#!/bin/bash
+
+case &quot;$1&quot; in
+
+up)
+    ifconfig usb0 172.17.0.254 netmask 255.255.0.0
+    iptables -F
+    iptables -t nat -F
+    iptables -t mangle -F
+    iptables -X
+    iptables -t nat -X
+    iptables -t mangle -X
+
+    iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+    iptables -A FORWARD -i usb0 -j ACCEPT
+
+    echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+
+    if ( ifconfig wlan0 | grep -q DOWN ); then
+        echo &quot;Don&#39;t forget to put up the wlan0 interface!&quot;
+    fi
+    ;;
+
+down)
+    iptables -F
+    iptables -t nat -F
+    iptables -t mangle -F
+
+    iptables -X
+    iptables -t nat -X
+    iptables -t mangle -X
+    ifconfig eth0 down
+    ;;
+
+*)
+    echo &quot;Usage: $0 {up|down}&quot;
+    exit 1
+    ;;
+
+esac
+
+exit 0</code></pre><p>On the target board, <code>/usr/local/src/usbnet_route</code> looks like this:</p><pre><code>#!/bin/bash
+
+case &quot;$1&quot; in
+
+up)
+
+    # fix routing table
+    for i in $(route -n | grep UG | sed &#39;s/  */,/g&#39;); do
+        $(echo $i | awk -F , &#39;{print(&quot;route del -net&quot;,$1,&quot;netmask&quot;,$3,&quot;gw&quot;,$2);}&#39;);
+    done
+
+    route add default gw 172.17.0.254
+    ;;
+
+down)
+
+    # fix routing table
+    for i in $(route -n | grep UG | sed &#39;s/  */,/g&#39;); do
+        $(echo $i | awk -F , &#39;{print(&quot;route del -net&quot;,$1,&quot;netmask&quot;,$3,&quot;gw&quot;,$2);}&#39;);
+    done
+    ;;
+
+*)
+    echo &quot;Usage: $0 {up|down}&quot;
+    exit 1
+    ;;
+
+esac
+
+exit 0</code></pre><p>If you don’t regularly connect an ethernet cable to your BBK at boot, you could run this script automatically by adding</p><pre><code>post-up /usr/local/src/usbnet_route up</code></pre><p>in the <code>usb0</code> stanza in <code>/etc/network/interfaces</code>. Otherwise, just go in via the serial port and enable it as necessary.</p><h2 id="pru-access-under-wheezy">PRU access under Wheezy</h2><p>One of the coolest features of the AM335x SOC on the BBK is the pair of Programmable Realtime Units (PRUs), 200 MHz RISC cores that run independently of the ARM core and with access to GPIO, peripherals, private memory, and system memory. These are <em>really</em> cool for making high-speed hardware interfaces or communications busses.</p><p>More background info on the PRUs is available from</p><ul><li><a href="http://elinux.org/ECE497_BeagleBone_PRU">ECE497 BeagleBone PRU</a> at elinux.org</li><li><a href="http://blog.boxysean.com/2012/08/12/first-steps-with-the-beaglebone-pru/">First Steps with the BeagleBone PRU</a> courtesy of boxysean</li><li><a href="https://github.com/beagleboard/am335x_pru_package"><code>am335x_pru_package</code></a> from the BeagleBoard.org team</li></ul><p>The first goal is to get the latter package working with the Debian Wheezy image we installed last time. Sadly, it doesn’t work right out of the box: following boxysean’s steps above, we get to the point where we’re ready to run the test code and find that the uio_pruss module shipped with our image apparently doesn’t work right.</p><pre><code>INFO: Starting PRU_memAccessPRUDataRam example.
+prussdrv_open open failed</code></pre><p>A little <code>strace</code>ing reveals the problem:</p><pre><code>open(&quot;/dev/uio0&quot;, O_RDWR|O_SYNC)        = -1 ENODEV (No such device)
+open(&quot;/sys/class/uio/uio0/maps/map0/addr&quot;, O_RDONLY) = -1 ENOENT (No such file or directory)</code></pre><p>Apparently something about the uio implementation is broken. Let’s investigate how it works with the default Angstrom image (aren’t you glad we kept our install on a microSD card? I am!).</p>
+<p><a href="./" style="text-decoration:none;float:left;">&larr;</a></p>
+<p class="footnote">Questions? Comments?<br />
+<a href="http://twitter.com/kwantam">@kwantam</a> | &lt;<a href="mailto:kwantam@gmail.com">kwantam@gmail.com</a>&gt; | <a href="http://github.com/kwantam">github</a></p>
+</body>
+</html>
