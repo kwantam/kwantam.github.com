@@ -91,7 +91,7 @@ If you don't regularly connect an ethernet cable to your BBK at boot, you could 
 
     post-up /usr/local/src/usbnet_route up
 
-in the `usb0` stanza in `/etc/network/interfaces`. Otherwise, just go in via the serial port and enable it as necessary.
+in the `usb0` stanza in `/etc/network/interfaces`. Otherwise, just go in via serial or SSH and enable it.
 
 PRU access under Wheezy
 --
@@ -103,8 +103,11 @@ More background info on the PRUs is available from
 * <a href="http://elinux.org/ECE497_BeagleBone_PRU">ECE497 BeagleBone PRU</a> at elinux.org
 * <a href="http://blog.boxysean.com/2012/08/12/first-steps-with-the-beaglebone-pru/">First Steps with the BeagleBone PRU</a> courtesy of boxysean
 * <a href="https://github.com/beagleboard/am335x_pru_package">`am335x_pru_package`</a> from the BeagleBoard.org team
+* <a href="https://github.com/boxysean/am335x_pru_package">boxysean's fork of `am335x_pru_package`</a>
 
-The first goal is to get the latter package working with the Debian Wheezy image we installed last time. Sadly, it doesn't work right out of the box: following boxysean's steps above, we get to the point where we're ready to run the test code and find that the uio\_pruss module shipped with our image apparently doesn't work right.
+The first goal is to get the latter package working with the Debian Wheezy image we installed last time. Grabbing the `am335x_pru_package`, we follow the build process that boxysean describes (see the "First Steps" link above). If you grab boxysean's fork of the package you get a couple LED blinking tests as well.
+
+Sadly, it doesn't work right out of the box: once we're ready to run the test code, it turns out that the uio\_pruss module shipped with our image apparently doesn't work right.
 
     INFO: Starting PRU_memAccessPRUDataRam example.
     prussdrv_open open failed
@@ -114,4 +117,112 @@ A little `strace`ing reveals the problem:
     open("/dev/uio0", O_RDWR|O_SYNC)        = -1 ENODEV (No such device)
     open("/sys/class/uio/uio0/maps/map0/addr", O_RDONLY) = -1 ENOENT (No such file or directory)
 
-Apparently something about the uio implementation is broken. Let's investigate how it works with the default Angstrom image (aren't you glad we kept our install on a microSD card? I am!).
+Apparently something about the uio implementation is broken. Let's see if we can't figure out what.
+
+My first inclination is to investigate how it works with the default &#8491;ngstrom image (aren't you glad we kept our install on a microSD card? I am!).
+
+Updating the eMMC from Debian (but not really)
+--
+
+First things first: you should be sure your &#8491;ngstrom image is up-to-date.
+
+After looking into it, it turns out that my board already has the <a href="https://s3.amazonaws.com/angstrom/demo/beaglebone/Angstrom-Cloud9-IDE-GNOME-eglibc-ipk-v2012.12-beaglebone-2013.04.13.img.xz">latest image</a>. However, before figuring this out, I set about coming up with a way to update the onboard &#8491;ngstrom image directly from our Debian install. I've recorded it here for posterity.
+
+1. On the *target board*, download the latest image:
+
+        cd /usr/local/src
+        wget https://s3.amazonaws.com/angstrom/demo/beaglebone/Angstrom-Cloud9-IDE-GNOME-eglibc-ipk-v2012.12-beaglebone-2013.04.13.img.xz
+
+    Note: if `wget` complains about certificates, it's probably because the date on your machine isn't set. `ntpdate -s time.mit.edu` will fix you right up.
+
+2. Decompress it:
+
+        xz -d Angstrom-Cloud9-IDE-GNOME-eglibc-ipk-v2012.12-beaglebone-2013.04.13.img.xz
+
+3. Now we have an .img file that's actually a disk with a partition table and two partitions. Using `fdisk` we can see that the two partitions start at offsets 63 and 144585, both expressed in units of 512 bytes. With this information, we can mount the partitions like so (note the offset we provide is 144585\*512):
+
+        mkdir -p /mnt/Afiles
+        mount -o loop,offset=74027520 BBB-eMMC-flasher-2013.04.13-DDR3-400MHz.img /mnt/Afiles
+
+4. In `/mnt/Afiles/build` we find the actual scripts that are used to flash the drive. Simply running `emmc.sh` should perform the update. Since I haven't actually done this, your mileage may vary.
+
+Getting the PRUSS working
+--
+
+I booted the &#8491;ngstrom system expecting things to work, but no love here. `modprobe uio_pruss` still resulted in an empty `/sys/class/uio` directory!
+
+A little more research turned up this thread, <a href="https://groups.google.com/forum/?fromgroups=#!topic/beagleboard/gqCjxh4uZi0">How to reliably activate PRUSS on beaglebone?</a> (from today!). Apparently there are some troubles with PRUSS under 3.8 kernels; until they're fixed, we can use Jacek Radzikowski's magical hack. Create `/usr/local/src/pruss_magic_jr`, like so:
+
+    #!/bin/bash
+    
+    progress_and_delay () {
+        echo -n "."
+        sleep 1
+    }
+    
+    SLOTS=/sys/devices/bone_capemgr.*/slots
+    
+    echo -n "Installing uio_pruss module ."
+    
+    /sbin/modprobe uio_pruss
+    progress_and_delay
+    
+    rmmod uio_pruss
+    progress_and_delay
+    
+    echo cape-bone-nixie > $SLOTS
+    progress_and_delay
+    
+    /sbin/modprobe uio_pruss
+    progress_and_delay
+    
+    echo cape-bone-nixie > $SLOTS
+    progress_and_delay
+    
+    rmmod uio_pruss
+    progress_and_delay
+    
+    /sbin/modprobe uio_pruss
+    progress_and_delay
+    
+    ( [ -L /sys/class/uio/uio0 ] || [ -d /sys/class/uio/uio0 ] ) && echo ' Success!' && exit 0
+    
+    # shouldn't get here if things worked
+    echo 'Failed.'
+    exit 1;
+
+After executing this, the PRUs work!
+
+    [root@charm]# ls /sys/class/uio/uio0/
+    total 0
+    drwxr-xr-x  4 root root    0 Jan  1 00:09 .
+    drwxr-xr-x 10 root root    0 Jan  1 00:09 ..
+    -r--r--r--  1 root root 4096 Jan  1 00:22 dev
+    lrwxrwxrwx  1 root root    0 Jan  1 00:22 device -> ../../../4a300000.pruss
+    -r--r--r--  1 root root 4096 Jan  1 00:22 event
+    drwxr-xr-x  4 root root    0 Jan  1 00:22 maps
+    -r--r--r--  1 root root 4096 Jan  1 00:22 name
+    drwxr-xr-x  2 root root    0 Jan  1 00:22 power
+    lrwxrwxrwx  1 root root    0 Jan  1 00:09 subsystem -> ../../../../../class/uio
+    -rw-r--r--  1 root root 4096 Jan  1 00:09 uevent
+    -r--r--r--  1 root root 4096 Jan  1 00:22 version
+    [root@charm]# ./PRU_PRUtoPRU_Interrupt 
+    
+    INFO: Starting PRU_PRUtoPRU_Interrupt example.
+    AM33XX
+    AM33XX
+            INFO: Initializing example.
+            INFO: Executing example on PRU0.
+    File ./PRU_PRU0toPRU1_Interrupt.bin open passed
+                    INFO: Executing example on PRU1.
+    File ./PRU_PRU1toPRU0_Interrupt.bin open passed
+            INFO: Waiting for HALT command.
+            INFO: PRU0 completed transfer.
+                    INFO: Waiting for HALT command.
+                    INFO: PRU1 completed transfer.
+    Example executed succesfully.
+
+Well, that's all the time I've got today. My goal in the near term is to use the PRUSS to do high-speed data capture and waveform generation. After that, I hope to wrap the whole thing in a nice web interface so that we can use the board as a pattern generator / logic capture card via a web browser.
+
+Stay tuned!
+
