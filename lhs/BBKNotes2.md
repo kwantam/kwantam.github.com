@@ -2,7 +2,7 @@
 % Riad Wahby
 % 2013 May 4
 
-Continuing from our <a href="BBKNotes1.html">previous session</a>, it's time to continue hacking.
+Picking up from our <a href="BBKNotes1.html">previous session</a>, it's time to hack some more.
 
 USB network bridge
 --
@@ -139,7 +139,7 @@ After looking into it, it turns out that my board already has the <a href="https
 
         xz -d Angstrom-Cloud9-IDE-GNOME-eglibc-ipk-v2012.12-beaglebone-2013.04.13.img.xz
 
-3. Now we have an .img file that's actually a disk with a partition table and two partitions. Using `fdisk` we can see that the two partitions start at offsets 63 and 144585, both expressed in units of 512 bytes. With this information, we can mount the partitions like so (note the offset we provide is 144585\*512):
+3. Now we have an .img file that's actually a disk with a partition table and two partitions. Using `fdisk` (yes, you can run `fdisk` on a regular file!) we can see that the two partitions start at offsets 63 and 144585, both expressed in units of 512 bytes. With this information, we can mount the partitions like so (note the offset we provide is 144585\*512):
 
         mkdir -p /mnt/Afiles
         mount -o loop,offset=74027520 BBB-eMMC-flasher-2013.04.13-DDR3-400MHz.img /mnt/Afiles
