@@ -3,6 +3,9 @@
 
 .SUFFIXES: .md .lhs .html
 
+MDTARGETS = $(subst md,html,$(wildcard *.md))
+LHSTARGETS = $(subst lhs,html,$(wildcard *.lhs))
+
 HTMLOUTPUTDIR := ../
 
 HSCOLOUR_CMD = hscolour -lit -css -partial
@@ -14,5 +17,8 @@ PANDOC_CMD = pandoc --no-wrap -sS -t html -H head.html -A tail.html
 .md.html:
 	cat $< | ${PANDOC_CMD} > ${HTMLOUTPUTDIR}/$@
 
-all:
-	@echo ERROR please choose a file!
+%.md: %.html
+
+%.lhs: %.html
+
+all: $(MDTARGETS) $(LHSTARGETS)
