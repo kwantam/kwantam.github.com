@@ -1,4 +1,6 @@
-# Cross Bootstrapping Rust #
+% Cross Bootstrapping Rust
+% Riad Wahby
+% 2013 June 23
 
 I have a Nexus7 with a linux chroot environment that I use as a really
 compact laptop. Recently I wanted to play with Rust on the go, but
