@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="css/hscolour.css" type="text/css" />
+  <link rel="stylesheet" href="css/main.css" type="text/css" />
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Brawler|Lato|Inconsolata" type="text/css" />
+  <link rel="SHORTCUT ICON" href="images/favicon.png">
+</head>
+<body>
+<h1 id="cross-bootstrapping-rust">Cross Bootstrapping Rust</h1><p>I have a Nexus7 with a linux chroot environment that I use as a really compact laptop. Recently I wanted to play with Rust on the go, but unfortunately there are neither <a href="http://www.rust-lang.org/install.html">nightlies</a> nor a stage0 bootstrap available. So we have to do this ourselves.</p><p>If you’re just looking for a relatively recent <code>rustc</code> for <code>arm-unknown-linux-gnueabihf</code> (e.g., Debian armhf) and don’t want to go through all this yourself, you can <a href="files/rust_arm-unknown-linux-gnueabihf_dist.tgz">just download the compiled binaries</a>. These are current as of 23 June 2014, but they should probably be sufficient to bootstrap HEAD for a while to come.</p><h2 id="problems-to-be-solved">Problems to be solved</h2><p>In an ideal world, the Rust build system (RBS) would be able to cross-bootstrap, but at least for now, this is a bit broken:</p><ol style="list-style-type: decimal"><li><p>When Rust is configured with <code>--host</code> and <code>--target</code> set to <code>arm-unknown-linux-gnueabihf</code>, it incorrectly passes the <code>--build=arm-unknown-linux-gnueabihf</code> switch to the LLVM configure script.</p></li><li><p>Even if the RBS had passed the correct switches to LLVM (<code>--host</code> and <code>--target</code>, but not <code>--build</code>), the build system relies upon the <code>llvm-config</code> binary to provide information about the LLVM build, and the location the RBS uses for the binary will have been built for the cross architecture rather than the build architecture.</p></li><li><p>It’s not possible to supply the RBS with different <code>--llvm-root</code> switches for multiple architectures.</p></li><li><p>By default, architectures that aren’t passed in the <code>--host</code> switch end up without the necessary Make targets to build <code>librustllvm</code> and <code>librustc</code>.</p></li><li><p>When RBS generates <code>llvmdeps.rs</code>, it produces a restrictive <code>#[cfg]</code> directive that keeps the cross rustlib from being linked to the LLVM libraries.</p></li></ol><h2 id="plan-of-action">Plan of action</h2><p>Here’s the plan:</p><ol style="list-style-type: decimal"><li><p>Build LLVM out of tree for both the build architecture (I am using <code>x86_64-unknown-linux-gnu</code>) and the cross architecture (<code>arm-unknown-linux-gnueabihf</code>).</p></li><li><p>Tweak the RBS slightly to use our LLVM builds.</p></li><li><p>Modify the RBS a little more to build working versions of all crates for all targets rather than just for the host system.</p></li><li><p>Build the host binaries and host and cross libraries.</p></li><li><p>Build the cross binaries.</p></li></ol><h2 id="first-steps">First steps</h2><p>First, to make sure we are on the same page, we will do a clean Rust clone:</p><pre><code>mkdir -p $HOME/toolchains/src
+cd $HOME/toolchains/src
+git clone https://github.com/mozilla/rust.git
+cd rust
+git submodule update --init</code></pre><p>Also, you will need a working gcc (4.7 or later; LLVM requires C++11 support) cross toolchain for your cross architecture, including g++ and libstdc++. Debian-ish users looking to build for ARM should be able to get this from <a href="http://emdebian.org">emdebian.org</a>, or you can <a href="http://emdebian.org/tools/crossdev.html">build your own</a>.</p><h2 id="configuring-rust">Configuring Rust</h2><pre><code>cd $HOME/toolchains/src/rust
+mkdir build
+cd build
+mkdir -p $HOME/toolchains/var/lib
+mkdir $HOME/toolchains/etc
+$PWD/../configure --prefix=$HOME/toolchains                       \
+    --host=x86_64-unknown-linux-gnu --disable-llvm-assertions     \
+    --target=x86_64-unknown-linux-gnu,arm-unknown-linux-gnueabihf \
+    --localstatedir=$HOME/toolchains/var/lib                      \
+    --sysconfdir=$HOME/toolchains/etc
+cd x86_64-unknown-linux-gnu
+find . -type d -exec mkdir -p ../arm-unknown-linux-gnueabihf/\{\} \;</code></pre><p>The last command makes sure that we have prepared the same directory structure under the cross directory as under the build directory. (I think we only really need <code>llvm/</code>, <code>rt/</code>, and <code>rustllvm/</code>, though.)</p><h2 id="building-cross-llvm">Building cross LLVM</h2><p>librustc needs to be linked against LLVM. In a cross build, these libraries have to be for the cross architecture (in our case, <code>arm-unknown-linux-gnueabihf</code>). We will also need LLVM for the build architecture. Because of problem #1, we will do this manually.</p><pre><code>cd $HOME/toolchains/src/rust/build/x86_64-unknown-linux-gnu/llvm
+$HOME/toolchains/src/rust/src/llvm/configure --enable-target=x86,x86_64,arm,mips  \
+    --enable-optimized --disable-assertions --disable-docs --enable-bindings=none \
+    --disable-terminfo --disable-zlib --disable-libffi                            \
+    --with-python=/usr/bin/python2.7
+make -j$(nproc)
+# (...this will take a while...)
+cd $HOME/toolchains/src/rust/build/arm-unknown-linux-gnueabihf/llvm
+$HOME/toolchains/src/rust/src/llvm/configure --enable-target=x86,x86_64,arm,mips  \
+    --enable-optimized --disable-assertions --disable-docs --enable-bindings=none \
+    --disable-terminfo --disable-zlib --disable-libffi                            \
+    --with-python=/usr/bin/python2.7 --build=x86_64-unknown-linux-gnu             \
+    --host=arm-unknown-linux-gnueabihf --target=arm-unknown-linux-gnueabihf
+make -j$(nproc)
+# (...again, a bit of a wait...)</code></pre><p>(I use <code>-j$(nproc)</code> above to parallelize the build as much as possible, but if your machine has limited RAM this might cause issues; feel free to just “make” instead.)</p><h3 id="enable-llvm-config-for-the-cross-llvm-build">Enable <code>llvm-config</code> for the cross LLVM build</h3><p>Recall problem #2, above: Rust will try to execute <code>llvm-config</code> for each architecture, but in the cross LLVM the binary is built for the cross architecture rather than ours. Fortunately, LLVM also builds a version of the binary that runs locally, so we just have to put it in the right place:</p><pre><code>cd $HOME/toolchains/src/rust/build/arm-unknown-linux-gnueabihf/llvm/Release/bin
+mv llvm-config llvm-config-arm
+ln -s ../../BuildTools/Release/bin/llvm-config .
+# (Now test to be sure this works.)
+./llvm-config --cxxflags
+# (You should see some CXX flags printed out here!)</code></pre><h3 id="making-rbs-use-our-llvm-builds">Making RBS use our LLVM builds</h3><p>Ideally, we’d be able to tell the Rust build system that we’ve done LLVM building ourselves and that’s that, and when compiling for a single architecture that’s possible, but sadly there is no way to tell it to use one LLVM for x86 and another for ARM (problem #3); that’s why we didn’t use the <code>--llvm-root</code> switch to the Rust configure script. Instead, we’ll manually tweak the configuration and hack the LLVM-related makefile slightly.</p><p>First, we add a couple definitions to <code>config.mk</code> telling RBS where to look for LLVM for each architecture:</p><pre><code>cd $HOME/toolchains/src/rust/build/
+chmod 0644 config.mk
+grep &#39;CFG_LLVM_[BI]&#39; config.mk |                                          \
+    sed &#39;s/x86_64\(.\)unknown.linux.gnu/arm\1unknown\1linux\1gnueabihf/g&#39; \
+    &gt;&gt; config.mk</code></pre><p>We also want to be sure that Rust doesn’t clean or rebuild these for us under any circumstances:</p><pre><code>cd $HOME/toolchains/src/rust
+sed -i.bak &#39;s/\([\t]*\)\(.*\$(MAKE).*\)/\1#\2/&#39; mk/llvm.mk</code></pre><h2 id="building-a-working-librustc-for-the-cross-architecture">Building a working librustc for the cross architecture</h2><p>Finally, we have to modify the Rust build system so that it has the necessary targets to build all crates for the cross architecture, (problem #4). To do this, we modify another few Makefiles:</p><pre><code>cd $HOME/toolchains/src/rust
+sed -i.bak                                                                         \
+    &#39;s/^CRATES := .*/TARGET_CRATES += $(HOST_CRATES)\nCRATES := $(TARGET_CRATES)/&#39; \
+    mk/crates.mk
+sed -i.bak                                                                                        \
+    &#39;s/\(.*call DEF_LLVM_VARS.*\)/\1\n$(eval $(call DEF_LLVM_VARS,arm-unknown-linux-gnueabihf))/&#39; \
+    mk/main.mk
+sed -i.bak &#39;s/foreach host,$(CFG_HOST)/foreach host,$(CFG_TARGET)/&#39; mk/rustllvm.mk</code></pre><p>One last thing: before librustc is built, library dependencies are generated using <code>src/etc/mklldeps.py</code>, but the <code>#[cfg]</code> directive it generates is too restrictive for our purposes (problem #5). As a result, librustc for the cross architecture will not be linked to the LLVM libs.</p><p>In this example, our targets are similar enough that llvm-config returns the same set of library dependencies for both. Depending on your host and cross architectures, this might not be the case. Since we are an easy case, we can make one quick change to <code>mklldeps.py</code> that enables correct linking:</p><pre><code>cd $HOME/toolchains/src/rust
+sed -i.bak &#39;s/.*target_arch = .*//&#39; src/etc/mklldeps.py</code></pre><p>If you want to verify that this is sufficient for your case, you can compare the output from the respective <code>llvm-config</code> executables like so:</p><pre><code>cd $HOME/toolchains/src/rust/build
+arm-unknown-linux-gnueabihf/llvm/Release/bin/llvm-config --libs \
+    | tr &#39;-&#39; &#39;\n&#39; | sort &gt; arm
+x86_64-unknown-linux-gnu/llvm/Release/bin/llvm-config --libs \
+    | tr &#39;-&#39; &#39;\n&#39; | sort &gt; x86
+diff arm x86</code></pre><p>Also note that the cross <code>llvm-config</code> binary nevertheless reports <code>x86_64-unknown-linux-gnu</code> when invoked with the <code>--host-target</code> switch, so if you need to roll your own modification to <code>mklldeps.py</code>, keep this in mind.</p><h2 id="build-it-part-1">Build it, part 1</h2><p>We’re finally ready to build!</p><pre><code>cd $HOME/toolchains/src/rust/build
+make -j4</code></pre><p>Again, note that I’m using <code>-j4</code> here; on a machine with less than 8Gb of RAM, you probably don’t want to do this because you risk heavy swapping and/or OOM kills—rustc takes a lot of memory!</p><h2 id="build-it-part-2">Build it, part 2</h2><p>One last thing: we have to actually produce the <code>rustc</code> and <code>rustdoc</code> binaries for our cross architecture</p><pre><code>cd $HOME/toolchains/src/rust/build
+LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
+    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
+    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
+    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
+    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustc --cfg rustc              \
+    $PWD/../src/driver/driver.rs
+LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
+    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
+    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
+    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
+    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustdoc --cfg rustdoc          \
+    $PWD/../src/driver/driver.rs</code></pre><p>We’ve now bootstrapped a rust compiler for the cross architecture. Let’s tar it up:</p><pre><code>cd $HOME/toolchains/src/rust/build/
+mkdir -p cross-dist/lib/rustlib/arm-unknown-linux-gnueabihf
+cd cross-dist
+cp -R ../x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/* \
+    lib/rustlib/arm-unknown-linux-gnueabihf
+mv lib/rustlib/arm-unknown-linux-gnueabihf/bin .
+cd lib
+for i in rustlib/arm-unknown-linux-gnueabihf/lib/*.so; do ln -s $i .; done
+cd ../
+tar cjf ../rust_arm-unknown-linux-gnueabihf_dist.tbz2 .</code></pre><p>Hooray!</p>
+<p><a href="./" style="text-decoration:none;float:left;">&larr;</a></p>
+<p class="footnote">Questions? Comments?<br />
+<a href="http://twitter.com/kwantam">@kwantam</a> | &lt;<a href="mailto:kwantam@gmail.com">kwantam@gmail.com</a>&gt; | <a href="http://github.com/kwantam">github</a></p>
+</body>
+</html>
