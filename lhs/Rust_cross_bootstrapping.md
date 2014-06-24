@@ -1,5 +1,5 @@
 % Cross Bootstrapping Rust
-% Riad Wahby
+% Riad Wahby (kwantam)
 % 2014 June 23
 
 I have a Nexus7 with a linux chroot environment that I use as a really
@@ -122,7 +122,7 @@ architecture. Because of problem #1, we will do this manually.
 
 (I use `-j$(nproc)` above to parallelize the build as much as possible,
 but if your machine has limited RAM this might cause issues; feel free
-to just "make" instead.)
+to just `make` instead.)
 
 ### Enable `llvm-config` for the cross LLVM build ###
 
