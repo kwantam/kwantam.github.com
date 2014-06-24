@@ -1,6 +1,6 @@
 % Cross Bootstrapping Rust
 % Riad Wahby
-% 2013 June 23
+% 2014 June 23
 
 I have a Nexus7 with a linux chroot environment that I use as a really
 compact laptop. Recently I wanted to play with Rust on the go, but
@@ -37,7 +37,7 @@ but at least for now, this is a bit broken:
    `librustc`.
 
 5. When RBS generates `llvmdeps.rs`, it produces a restrictive `#[cfg]`
-   directive that keeps the cross rustlib from being linked to the LLVM
+   directive that keeps the cross librustc from being linked to the LLVM
    libraries.
 
 ## Plan of action ##
@@ -71,7 +71,9 @@ Also, you will need a working gcc (4.7 or later; LLVM requires C++11
 support) cross toolchain for your cross architecture, including g++ and
 libstdc++. Debian-ish users looking to build for ARM should be able to
 get this from [emdebian.org](http://emdebian.org), or you can 
-[build your own](http://emdebian.org/tools/crossdev.html).
+[build your own](http://emdebian.org/tools/crossdev.html). Of course,
+you will need all of the standard Rust prerequisites as well: python
+(2.6 or 2.7), perl, make 3.81 or later, and curl.
 
 ## Configuring Rust ##
 
@@ -87,6 +89,9 @@ get this from [emdebian.org](http://emdebian.org), or you can
         --sysconfdir=$HOME/toolchains/etc
     cd x86_64-unknown-linux-gnu
     find . -type d -exec mkdir -p ../arm-unknown-linux-gnueabihf/\{\} \;
+
+(Of course, feel free to modify `--prefix`, `--localstatedir`, and
+`--sysconfdir` as appropriate for your system.)
 
 The last command makes sure that we have prepared the same directory
 structure under the cross directory as under the build directory. (I
@@ -210,9 +215,9 @@ We're finally ready to build!
     cd $HOME/toolchains/src/rust/build
     make -j4
 
-Again, note that I'm using `-j4` here; on a machine with less than 8Gb
+(Again, note that I'm using `-j4` here; on a machine with less than 8Gb
 of RAM, you probably don't want to do this because you risk heavy
-swapping and/or OOM kills---rustc takes a lot of memory!
+swapping and/or OOM kills---rustc takes a lot of memory!)
 
 ## Build it, part 2 ##
 
