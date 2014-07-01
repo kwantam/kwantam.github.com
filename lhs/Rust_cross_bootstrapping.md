@@ -11,8 +11,8 @@ If you're just looking for a relatively recent `rustc` for
 `arm-unknown-linux-gnueabihf` (e.g., Debian armhf) and don't want to go
 through all this yourself, you can just download a binary tarball (most recent listed first):
 
-- [files/rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2)
-- [files/rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2)
+- [rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2)
+- [rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2)
 
 ## Problems to be solved ##
 
