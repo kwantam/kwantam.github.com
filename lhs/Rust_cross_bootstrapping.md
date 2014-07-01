@@ -9,10 +9,10 @@ nor a stage0 bootstrap available. So we have to do this ourselves.
 
 If you're just looking for a relatively recent `rustc` for
 `arm-unknown-linux-gnueabihf` (e.g., Debian armhf) and don't want to go
-through all this yourself, you can
-[just download the compiled binaries](files/rust_arm-unknown-linux-gnueabihf_dist.tbz2).
-These are current as of 23 June 2014, but they should probably be
-sufficient to bootstrap HEAD for a while to come.
+through all this yourself, you can just download a binary tarball (most recent listed first):
+
+- [files/rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140630.tbz2)
+- [files/rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2](files/rust_arm-unknown-linux-gnueabihf_dist_20140623.tbz2)
 
 ## Problems to be solved ##
 
