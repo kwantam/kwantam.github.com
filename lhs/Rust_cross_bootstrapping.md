@@ -129,7 +129,7 @@ There is a subtlety here: when building the ARM LLVM libs, I pass
 `arm-unknown-linux-gnueabihf`. The reason is that, in the latter case,
 the LLVM build script assumes it will find a gcc called
 `arm-unknown-linux-gnueabihf`; when it doesn't, it silently falls back to
-the system GCC, which will produce binaries of the wrong flavor.
+the system `gcc`, which will produce binaries of the wrong flavor.
 
 ### Enable `llvm-config` for the cross LLVM build ###
 
