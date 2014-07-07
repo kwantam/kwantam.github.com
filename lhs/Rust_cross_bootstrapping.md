@@ -24,7 +24,7 @@ but at least for now, this is a bit broken:
    to the LLVM configure script.
 
 2. Even if the RBS had passed the correct switches to LLVM (`--host` and
-   `--target`, but not `--build`), the build system relies upon the 
+   `--target`, but not `--build`), the build system relies upon the
    `llvm-config` binary to provide information about the LLVM build, and
    the location the RBS uses for the binary will have been built for the
    cross architecture rather than the build architecture.
@@ -70,7 +70,7 @@ First, to make sure we are on the same page, we will do a clean Rust clone:
 Also, you will need a working gcc (4.7 or later; LLVM requires C++11
 support) cross toolchain for your cross architecture, including g++ and
 libstdc++. Debian-ish users looking to build for ARM should be able to
-get this from [emdebian.org](http://emdebian.org), or you can 
+get this from [emdebian.org](http://emdebian.org), or you can
 [build your own](http://emdebian.org/tools/crossdev.html). Of course,
 you will need all of the standard Rust prerequisites as well: python
 (2.6 or 2.7), perl, make 3.81 or later, and curl.
@@ -116,13 +116,20 @@ architecture. Because of problem #1, we will do this manually.
         --enable-optimized --disable-assertions --disable-docs --enable-bindings=none \
         --disable-terminfo --disable-zlib --disable-libffi                            \
         --with-python=/usr/bin/python2.7 --build=x86_64-unknown-linux-gnu             \
-        --host=arm-unknown-linux-gnueabihf --target=arm-unknown-linux-gnueabihf
+        --host=arm-linux-gnueabihf --target=arm-linux-gnueabihf
     make -j$(nproc)
     # (...again, a bit of a wait...)
 
 (I use `-j$(nproc)` above to parallelize the build as much as possible,
 but if your machine has limited RAM this might cause issues; feel free
 to just `make` instead.)
+
+There is a subtlety here: when building the ARM LLVM libs, I pass
+`arm-linux-gnueabihf` for `--host` and `--build`, rather than
+`arm-unknown-linux-gnueabihf`. The reason is that, in the latter case,
+the LLVM build script assumes it will find a gcc called
+`arm-unknown-linux-gnueabihf`; when it doesn't, it silently falls back to
+the system GCC, which will produce binaries of the wrong flavor.
 
 ### Enable `llvm-config` for the cross LLVM build ###
 
