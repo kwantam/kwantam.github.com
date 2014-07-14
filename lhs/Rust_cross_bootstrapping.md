@@ -232,17 +232,17 @@ One last thing: we have to actually produce the `rustc` and `rustdoc`
 binaries for our cross architecture
 
     cd $HOME/toolchains/src/rust/build
-    LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
-        ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
-        -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
-        --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
-        -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustc --cfg rustc              \
+    LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH \
+        ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                    \
+        -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                 \
+        --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                         \
+        -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustc --cfg rustc           \
         $PWD/../src/driver/driver.rs
-    LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
-        ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
-        -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
-        --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
-        -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustdoc --cfg rustdoc          \
+    LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH \
+        ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                    \
+        -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                 \
+        --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                         \
+        -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustdoc --cfg rustdoc       \
         $PWD/../src/driver/driver.rs
 
 We've now bootstrapped a rust compiler for the cross architecture. Let's tar it up:

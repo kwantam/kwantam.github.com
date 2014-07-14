@@ -71,17 +71,17 @@ x86_64-unknown-linux-gnu/llvm/Release/bin/llvm-config --libs \
     | tr &#39;-&#39; &#39;\n&#39; | sort &gt; x86
 diff arm x86</code></pre><p>Also note that the cross <code>llvm-config</code> binary nevertheless reports <code>x86_64-unknown-linux-gnu</code> when invoked with the <code>--host-target</code> switch, so if you need to roll your own modification to <code>mklldeps.py</code>, keep this in mind.</p><h2 id="build-it-part-1">Build it, part 1</h2><p>We’re finally ready to build!</p><pre><code>cd $HOME/toolchains/src/rust/build
 make -j4</code></pre><p>(Again, note that I’m using <code>-j4</code> here; on a machine with less than 8Gb of RAM, you probably don’t want to do this because you risk heavy swapping and/or OOM kills—rustc takes a lot of memory!)</p><h2 id="build-it-part-2">Build it, part 2</h2><p>One last thing: we have to actually produce the <code>rustc</code> and <code>rustdoc</code> binaries for our cross architecture</p><pre><code>cd $HOME/toolchains/src/rust/build
-LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
-    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
-    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
-    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
-    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustc --cfg rustc              \
+LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH \
+    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                    \
+    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                 \
+    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                         \
+    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustc --cfg rustc           \
     $PWD/../src/driver/driver.rs
-LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/lib:$LD_LIBRARY_PATH \
-    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                       \
-    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                    \
-    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                            \
-    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustdoc --cfg rustdoc          \
+LD_LIBRARY_PATH=$PWD/x86_64-unknown-linux-gnu/stage2/lib/rustlib/x86_64-unknown-linux-gnu/lib:$LD_LIBRARY_PATH \
+    ./x86_64-unknown-linux-gnu/stage2/bin/rustc --cfg stage2 -O --cfg rtopt                                    \
+    -C linker=arm-linux-gnueabihf-g++ -C ar=arm-linux-gnueabihf-ar -C target-feature=+v6,+vfp2                 \
+    --cfg debug -C prefer-dynamic --target=arm-unknown-linux-gnueabihf                                         \
+    -o x86_64-unknown-linux-gnu/stage2/lib/rustlib/arm-unknown-linux-gnueabihf/bin/rustdoc --cfg rustdoc       \
     $PWD/../src/driver/driver.rs</code></pre><p>We’ve now bootstrapped a rust compiler for the cross architecture. Let’s tar it up:</p><pre><code>cd $HOME/toolchains/src/rust/build/
 mkdir -p cross-dist/lib/rustlib/arm-unknown-linux-gnueabihf
 cd cross-dist
