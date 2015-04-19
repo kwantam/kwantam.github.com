@@ -8,7 +8,7 @@
   <title>BeagleBone Black Notes, Part 1</title>
   <link rel="stylesheet" href="css/hscolour.css" type="text/css" />
   <link rel="stylesheet" href="css/main.css" type="text/css" />
-  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Brawler|Lato|Inconsolata" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Brawler|Lato|Inconsolata" type="text/css" />
   <link rel="SHORTCUT ICON" href="images/favicon.png">
 </head>
 <body>
@@ -51,6 +51,6 @@ ls /mnt/ext</code></pre><p>and</p><pre><code>ifconfig usb0 172.17.0.2 netmask 25
 ssh root@172.17.0.1</code></pre><p>and</p><pre><code>screen /dev/ttyACM0 115200</code></pre><p>If all of this works, go ahead and reboot your device and double check that everything comes up as expected. Oh yeah, you might want to edit <code>/etc/hostname</code> first.</p><h2 id="other-software">Other software</h2><p>This is a list of some other stuff I’ve installed. Compiling the Gambit scheme with the <code>--enable-single-host</code> and <code>--enable-gcc-opts</code> switches takes a <em>seriously</em> long time, but the result is a compiler that generates substantially faster executables. It’s probably worth it. Might not hurt to give <code>CFLAGS=&quot;-mfloat-abi=hard&quot;</code> to the <code>configure</code> script, either.</p><ul><li>gcc</li><li>make</li><li>strace</li><li>latrace</li><li>libreadline6-dev</li><li><a href="http://gambitscheme.org/">gambit scheme</a></li><li><a href="http://github.com/kwantam/lviv/">lviv</a></li><li>octave</li></ul>
 <p><a href="./" style="text-decoration:none;float:left;">&larr;</a></p>
 <p class="footnote">Questions? Comments?<br />
-<a href="http://twitter.com/kwantam">@kwantam</a> | &lt;<a href="mailto:kwantam@gmail.com">kwantam@gmail.com</a>&gt; | <a href="http://github.com/kwantam">github</a></p>
+<a href="https://twitter.com/kwantam">@kwantam</a> | &lt;<a href="mailto:kwantam@gmail.com">kwantam@gmail.com</a>&gt; | <a href="https://github.com/kwantam">github</a></p>
 </body>
 </html>
