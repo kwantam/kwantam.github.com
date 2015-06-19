@@ -2,6 +2,16 @@
 % Riad Wahby (kwantam)
 % 2014 June 23
 
+## Update: June 2015 ##
+
+The advice here should be considered out of date: it applies to a version
+of Rust's build system from about a year ago. I believe things are a bit
+simpler nowadays, though I haven't gone through this exercise for some time.
+If/when I have a chance, I will update this with newer information. Until
+then, I recommend chatting with the friendly folks in #rust on irc.mozilla.org.
+
+## Introduction ##
+
 I have a Nexus7 with a linux chroot environment that I use as a really
 compact laptop. Recently I wanted to play with Rust on the go, but
 unfortunately there are neither [nightlies](http://www.rust-lang.org/install.html)

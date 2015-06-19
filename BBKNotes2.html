@@ -6,6 +6,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Riad Wahby" />
   <title>BeagleBone Black Notes, Part 2</title>
+  <style type="text/css">code{white-space: pre;}</style>
   <link rel="stylesheet" href="css/hscolour.css" type="text/css" />
   <link rel="stylesheet" href="css/main.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Brawler|Lato|Inconsolata" type="text/css" />
@@ -44,7 +45,7 @@ down)
     iptables -F
     iptables -t nat -F
     iptables -t mangle -F
-
+    
     iptables -X
     iptables -t nat -X
     iptables -t mangle -X
