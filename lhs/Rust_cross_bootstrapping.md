@@ -5,10 +5,12 @@
 ## Update: June 2015 ##
 
 The advice here should be considered out of date: it applies to a version
-of Rust's build system from about a year ago. I believe things are a bit
-simpler nowadays, though I haven't gone through this exercise for some time.
-If/when I have a chance, I will update this with newer information. Until
-then, I recommend chatting with the friendly folks in #rust on irc.mozilla.org.
+of Rust's build system from about a year ago.
+
+The [ruststrap](https://github.com/japaric/ruststrap) project produces
+unofficial ARM builds, and also provides a [modern cross-compiling
+howto](https://github.com/japaric/ruststrap/blob/master/1-how-to-cross-compile.md)
+that is up-to-date.
 
 ## Introduction ##
 
