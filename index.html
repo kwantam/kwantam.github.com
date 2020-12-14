@@ -18,7 +18,7 @@ published: true
 <h3>Snippets</h3>
 <h4>or, my irregularly updated code blog</h4>
 <dl><dt>2011 June 17</dt>
-    <dd>A <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme derived via the <a href="http://blog.jfet.org/2009/06/14#2009061401">applicative-order Y-combinator:</a><br/>
+    <dd>A <a href="http://www.nyx.net/~gthompso/quine.htm">quine</a> in Scheme derived via the applicative-order Y-combinator:<br/>
 {% highlight scheme %}
     ((eval '(lambda (x) (pp `((eval '(lambda (x) (pp ,x))) ',x))))
            '`((eval '(lambda (x) (pp ,x))) ',x))
